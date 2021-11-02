@@ -4,7 +4,7 @@ import datetime
 import hashlib
 import html.entities
 import re
-
+import html2text
 
 def find_all_tags(fp, tags, progress_callback=None):
     parser = ET.XMLPullParser(("start", "end"))
@@ -40,11 +40,19 @@ def save_note(db, note):
     content = resolve_entities(
         strip_prolog_and_doctype(note.find("content").text.strip())
     )
+
+    h = html2text.HTML2Text()
+    h.ignore_images = True
+    markdown = h.handle(content).strip()
+    if markdown == '':
+        markdown = None
+
     row = {
         "title": title,
         "content": content,
         "created": convert_datetime(created),
         "updated": convert_datetime(updated),
+        "content_markdown": markdown,
     }
     attributes = note.find("note-attributes")
     if attributes is not None:
